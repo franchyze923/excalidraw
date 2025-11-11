@@ -1,23 +1,33 @@
+version: '3.8'
+
 services:
-  excalidraw:
+  excalidraw-sso:
     build:
       context: .
+      dockerfile: Dockerfile
       args:
-        - NODE_ENV=development
-    container_name: excalidraw
+        # Azure AD configuration at build time (can be overridden at runtime)
+        VITE_AZURE_CLIENT_ID: ${VITE_AZURE_CLIENT_ID:-00000000-0000-0000-0000-000000000000}
+        VITE_AZURE_TENANT_ID: ${VITE_AZURE_TENANT_ID:-common}
+        VITE_AZURE_REDIRECT_URI: ${VITE_AZURE_REDIRECT_URI:-http://localhost}
+    image: excalidraw-sso:latest
+    container_name: excalidraw-sso
     ports:
-      - "3000:80"
-    restart: on-failure
-    stdin_open: true
-    healthcheck:
-      disable: true
+      - "80:80"
     environment:
-      - NODE_ENV=development
-    volumes:
-      - ./:/opt/node_app/app:delegated
-      - ./package.json:/opt/node_app/package.json
-      - ./yarn.lock:/opt/node_app/yarn.lock
-      - notused:/opt/node_app/app/node_modules
+      - NODE_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
-volumes:
-  notused:
+# Production configuration:
+# 1. Create a .env file with your Azure AD credentials (see .env.docker.example)
+# 2. Run: docker-compose up -d
+#
+# Local login is always available:
+# - Username: admin
+# - Password: password

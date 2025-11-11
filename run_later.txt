@@ -1,0 +1,2 @@
+This works, but now I need to base the code off of the repo located at https://github.com/pmoscode-helm/excalidraw-docker. This allows the hard coded collab server URL to be customized. Instead of what we originally based it off of https://github.com/excalidraw/excalidraw.
+Should be a simple update because this repo references the other repo: excalidraw@2b45402. You might be able to clone the repo and just update the linked repo to point to what we have developed locally instead of excalidraw@2b45402.

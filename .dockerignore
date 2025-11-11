@@ -11,9 +11,14 @@
 !scripts/
 !tsconfig.json
 !yarn.lock
+!docker/
+
+# Exclude local environment files
+excalidraw-app/.env.local
 
 # keep (sub)sub directories at the end to exclude from explicit included
 # e.g. ./packages/excalidraw/{dist,node_modules}
 **/build
 **/dist
 **/node_modules
+**/.claude
