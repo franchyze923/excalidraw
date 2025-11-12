@@ -1,6 +1,6 @@
-# Excalidraw Docker Deployment Guide
+# Excalidraw SSO - Docker Deployment Guide
 
-This guide explains how to build and deploy Excalidraw with dynamic collaboration server configuration and optional SSO authentication using Docker.
+This guide explains how to build and deploy Excalidraw with SSO authentication using Docker.
 
 ## Quick Start
 
@@ -38,29 +38,6 @@ docker logs -f excalidraw-sso
 docker stop excalidraw-sso
 docker rm excalidraw-sso
 ```
-
-## Collaboration Server Configuration
-
-The Docker image supports **dynamic collaboration server URL customization** via environment variables. This allows you to point Excalidraw to your own collaboration server instead of the default OSS Excalidraw server.
-
-### At Runtime:
-
-```bash
-docker run -d \
-  --name excalidraw \
-  -p 80:80 \
-  -e APP_WS_OLD_SERVER_URL=https://oss-collab.excalidraw.com \
-  -e APP_WS_NEW_SERVER_URL=http://your-collab-server:3002 \
-  excalidraw:latest
-```
-
-Or with Docker Compose, add to your `.env` file:
-```env
-APP_WS_OLD_SERVER_URL=https://oss-collab.excalidraw.com
-APP_WS_NEW_SERVER_URL=http://your-collab-server:3002
-```
-
-**Note:** `APP_WS_OLD_SERVER_URL` should match the URL that was built into the application (default: `https://oss-collab.excalidraw.com`). The script will search for this URL in all JavaScript files and replace it with your custom server URL.
 
 ## Authentication Options
 
@@ -177,15 +154,6 @@ docker inspect --format='{{.State.Health.Status}}' excalidraw-sso
 ```
 
 ## Environment Variables
-
-### Collaboration Server
-
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `APP_WS_OLD_SERVER_URL` | Original hardcoded collaboration server URL | https://oss-collab.excalidraw.com | No (only if customizing) |
-| `APP_WS_NEW_SERVER_URL` | Custom collaboration server URL to replace with | http://localhost:3002 | No (only if customizing) |
-
-### Azure AD SSO (Optional)
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
