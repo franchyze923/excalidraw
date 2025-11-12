@@ -3,7 +3,12 @@ import type { OAuthConfig } from "./lib/oauth";
 /**
  * OAuth configuration for custom company SSO
  *
- * Configure these environment variables in .env.local:
+ * Configuration is loaded from:
+ * 1. window.__OAUTH_CONFIG__ (injected at runtime by Docker/Kubernetes entrypoint)
+ * 2. import.meta.env (build-time environment variables)
+ * 3. Defaults (fallback values)
+ *
+ * Configure these environment variables:
  * - VITE_OAUTH_CLIENT_ID: Your OAuth client ID
  * - VITE_OAUTH_AUTHORIZATION_ENDPOINT: Authorization server URL
  * - VITE_OAUTH_TOKEN_ENDPOINT: Token exchange URL
@@ -11,25 +16,45 @@ import type { OAuthConfig } from "./lib/oauth";
  * - VITE_OAUTH_SCOPES: Comma-separated list of scopes (optional)
  */
 
+// Get OAuth config from window (injected at runtime) or fall back to env vars
+const windowConfig = typeof window !== "undefined" ? (window as any).__OAUTH_CONFIG__ : null;
+
 export const oauthConfig: OAuthConfig = {
-  clientId: import.meta.env.VITE_OAUTH_CLIENT_ID || "",
+  clientId:
+    windowConfig?.clientId ||
+    import.meta.env.VITE_OAUTH_CLIENT_ID ||
+    "",
   authorizationEndpoint:
-    import.meta.env.VITE_OAUTH_AUTHORIZATION_ENDPOINT || "",
-  tokenEndpoint: import.meta.env.VITE_OAUTH_TOKEN_ENDPOINT || "",
+    windowConfig?.authorizationEndpoint ||
+    import.meta.env.VITE_OAUTH_AUTHORIZATION_ENDPOINT ||
+    "",
+  tokenEndpoint:
+    windowConfig?.tokenEndpoint ||
+    import.meta.env.VITE_OAUTH_TOKEN_ENDPOINT ||
+    "",
   redirectUri:
-    import.meta.env.VITE_OAUTH_REDIRECT_URI || window.location.origin,
-  scopes: import.meta.env.VITE_OAUTH_SCOPES
-    ? import.meta.env.VITE_OAUTH_SCOPES.split(",").map((s: string) => s.trim())
-    : ["openid", "profile", "email"],
+    windowConfig?.redirectUri ||
+    import.meta.env.VITE_OAUTH_REDIRECT_URI ||
+    window.location.origin,
+  scopes: windowConfig?.scopes
+    ? windowConfig.scopes
+        .split(",")
+        .map((s: string) => s.trim())
+    : import.meta.env.VITE_OAUTH_SCOPES
+      ? import.meta.env.VITE_OAUTH_SCOPES.split(",").map((s: string) =>
+          s.trim()
+        )
+      : ["openid", "profile", "email"],
 };
 
 // Debug logging
 if (typeof window !== "undefined") {
   // eslint-disable-next-line no-console
-  console.log("OAuth Config:", {
+  console.log("OAuth Config (from window.__OAUTH_CONFIG__):", {
     clientId: oauthConfig.clientId ? "***set***" : "NOT SET",
     authorizationEndpoint: oauthConfig.authorizationEndpoint || "NOT SET",
     tokenEndpoint: oauthConfig.tokenEndpoint || "NOT SET",
     redirectUri: oauthConfig.redirectUri || "NOT SET",
+    scopes: oauthConfig.scopes.join(", "),
   });
 }

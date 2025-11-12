@@ -17,18 +17,28 @@ if [ -n "$VITE_OAUTH_CLIENT_ID" ] || [ -n "$VITE_OAUTH_AUTHORIZATION_ENDPOINT" ]
     echo "  Token Endpoint: ${VITE_OAUTH_TOKEN_ENDPOINT}"
     echo "  Redirect URI: ${VITE_OAUTH_REDIRECT_URI}"
 
-    # Find all JavaScript files in the build directory and replace OAuth configuration
-    # Handle multiple patterns that might appear in the bundled JS
-    find /usr/share/nginx/html -type f -name "*.js" -print0 | xargs -0 sed -i \
-        -e "s|VITE_OAUTH_CLIENT_ID:\"[^\"]*\"|VITE_OAUTH_CLIENT_ID:\"${VITE_OAUTH_CLIENT_ID}\"|g" \
-        -e "s|clientId:\"[^\"]*\"|clientId:\"${VITE_OAUTH_CLIENT_ID}\"|g" \
-        -e "s|VITE_OAUTH_AUTHORIZATION_ENDPOINT:\"[^\"]*\"|VITE_OAUTH_AUTHORIZATION_ENDPOINT:\"${VITE_OAUTH_AUTHORIZATION_ENDPOINT}\"|g" \
-        -e "s|authorizationEndpoint:\"[^\"]*\"|authorizationEndpoint:\"${VITE_OAUTH_AUTHORIZATION_ENDPOINT}\"|g" \
-        -e "s|VITE_OAUTH_TOKEN_ENDPOINT:\"[^\"]*\"|VITE_OAUTH_TOKEN_ENDPOINT:\"${VITE_OAUTH_TOKEN_ENDPOINT}\"|g" \
-        -e "s|tokenEndpoint:\"[^\"]*\"|tokenEndpoint:\"${VITE_OAUTH_TOKEN_ENDPOINT}\"|g" \
-        -e "s|VITE_OAUTH_REDIRECT_URI:\"[^\"]*\"|VITE_OAUTH_REDIRECT_URI:\"${VITE_OAUTH_REDIRECT_URI}\"|g" \
-        -e "s|redirectUri:\"[^\"]*\"|redirectUri:\"${VITE_OAUTH_REDIRECT_URI}\"|g" \
-        -e "s|VITE_OAUTH_SCOPES:\"[^\"]*\"|VITE_OAUTH_SCOPES:\"${VITE_OAUTH_SCOPES}\"|g"
+    # Create a config script that will be injected into the HTML
+    cat > /usr/share/nginx/html/oauth-config.js << 'OAUTH_CONFIG_EOF'
+window.__OAUTH_CONFIG__ = {
+  clientId: "OAUTH_CLIENT_ID_PLACEHOLDER",
+  authorizationEndpoint: "OAUTH_AUTH_ENDPOINT_PLACEHOLDER",
+  tokenEndpoint: "OAUTH_TOKEN_ENDPOINT_PLACEHOLDER",
+  redirectUri: "OAUTH_REDIRECT_URI_PLACEHOLDER",
+  scopes: "OAUTH_SCOPES_PLACEHOLDER"
+};
+OAUTH_CONFIG_EOF
+
+    # Replace placeholders with actual values
+    sed -i \
+        "s|OAUTH_CLIENT_ID_PLACEHOLDER|${VITE_OAUTH_CLIENT_ID}|g" \
+        -e "s|OAUTH_AUTH_ENDPOINT_PLACEHOLDER|${VITE_OAUTH_AUTHORIZATION_ENDPOINT}|g" \
+        -e "s|OAUTH_TOKEN_ENDPOINT_PLACEHOLDER|${VITE_OAUTH_TOKEN_ENDPOINT}|g" \
+        -e "s|OAUTH_REDIRECT_URI_PLACEHOLDER|${VITE_OAUTH_REDIRECT_URI}|g" \
+        -e "s|OAUTH_SCOPES_PLACEHOLDER|${VITE_OAUTH_SCOPES:-openid,profile,email}|g" \
+        /usr/share/nginx/html/oauth-config.js
+
+    # Inject the config script into the main index.html (before other scripts)
+    sed -i "/<head>/a\\  <script src=\"/oauth-config.js\"></script>" /usr/share/nginx/html/index.html
 
     echo "OAuth configuration injected successfully."
     CONFIG_INJECTED=true
