@@ -67,28 +67,49 @@ export class OAuthClient {
    * Generates PKCE parameters and redirects to authorization endpoint
    */
   async initiateLogin(): Promise<void> {
-    // Generate PKCE parameters
-    const codeVerifier = generateRandomString(128);
-    const codeChallenge = await generateCodeChallenge(codeVerifier);
-    const state = generateRandomString(32);
+    try {
+      // Validate config
+      if (!this.config.clientId) {
+        throw new Error("OAuth Client ID not configured (VITE_OAUTH_CLIENT_ID)");
+      }
+      if (!this.config.authorizationEndpoint) {
+        throw new Error("OAuth Authorization Endpoint not configured (VITE_OAUTH_AUTHORIZATION_ENDPOINT)");
+      }
+      if (!this.config.redirectUri) {
+        throw new Error("OAuth Redirect URI not configured (VITE_OAUTH_REDIRECT_URI)");
+      }
 
-    // Store for later verification
-    sessionStorage.setItem(STORAGE_KEY_CODE_VERIFIER, codeVerifier);
-    sessionStorage.setItem(STORAGE_KEY_STATE, state);
+      // Generate PKCE parameters
+      const codeVerifier = generateRandomString(128);
+      const codeChallenge = await generateCodeChallenge(codeVerifier);
+      const state = generateRandomString(32);
 
-    // Build authorization URL
-    const params = new URLSearchParams({
-      client_id: this.config.clientId,
-      response_type: "code",
-      redirect_uri: this.config.redirectUri,
-      state,
-      code_challenge: codeChallenge,
-      code_challenge_method: "S256",
-      ...(this.config.scopes && { scope: this.config.scopes.join(" ") }),
-    });
+      // Store for later verification
+      sessionStorage.setItem(STORAGE_KEY_CODE_VERIFIER, codeVerifier);
+      sessionStorage.setItem(STORAGE_KEY_STATE, state);
 
-    // Redirect to authorization endpoint
-    window.location.href = `${this.config.authorizationEndpoint}?${params.toString()}`;
+      // Build authorization URL
+      const params = new URLSearchParams({
+        client_id: this.config.clientId,
+        response_type: "code",
+        redirect_uri: this.config.redirectUri,
+        state,
+        code_challenge: codeChallenge,
+        code_challenge_method: "S256",
+        ...(this.config.scopes && { scope: this.config.scopes.join(" ") }),
+      });
+
+      const authUrl = `${this.config.authorizationEndpoint}?${params.toString()}`;
+      // eslint-disable-next-line no-console
+      console.log("OAuth: Redirecting to authorization endpoint:", authUrl);
+
+      // Redirect to authorization endpoint
+      window.location.href = authUrl;
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("OAuth initiate login error:", error);
+      throw error;
+    }
   }
 
   /**
