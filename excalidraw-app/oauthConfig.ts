@@ -22,3 +22,14 @@ export const oauthConfig: OAuthConfig = {
     ? import.meta.env.VITE_OAUTH_SCOPES.split(",").map((s: string) => s.trim())
     : ["openid", "profile", "email"],
 };
+
+// Debug logging
+if (typeof window !== "undefined") {
+  // eslint-disable-next-line no-console
+  console.log("OAuth Config:", {
+    clientId: oauthConfig.clientId ? "***set***" : "NOT SET",
+    authorizationEndpoint: oauthConfig.authorizationEndpoint || "NOT SET",
+    tokenEndpoint: oauthConfig.tokenEndpoint || "NOT SET",
+    redirectUri: oauthConfig.redirectUri || "NOT SET",
+  });
+}
