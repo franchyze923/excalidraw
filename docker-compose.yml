@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  excalidraw-sso:
+  excalidraw:
     build:
       context: .
       dockerfile: Dockerfile
@@ -10,11 +10,18 @@ services:
         VITE_AZURE_CLIENT_ID: ${VITE_AZURE_CLIENT_ID:-00000000-0000-0000-0000-000000000000}
         VITE_AZURE_TENANT_ID: ${VITE_AZURE_TENANT_ID:-common}
         VITE_AZURE_REDIRECT_URI: ${VITE_AZURE_REDIRECT_URI:-http://localhost}
-    image: excalidraw-sso:latest
-    container_name: excalidraw-sso
+    image: excalidraw:latest
+    container_name: excalidraw
     ports:
       - "80:80"
     environment:
+      # Collaboration Server Configuration (runtime)
+      - APP_WS_OLD_SERVER_URL=${APP_WS_OLD_SERVER_URL:-https://oss-collab.excalidraw.com}
+      - APP_WS_NEW_SERVER_URL=${APP_WS_NEW_SERVER_URL:-http://localhost:3002}
+      # Azure AD Configuration (runtime)
+      - VITE_AZURE_CLIENT_ID=${VITE_AZURE_CLIENT_ID:-00000000-0000-0000-0000-000000000000}
+      - VITE_AZURE_TENANT_ID=${VITE_AZURE_TENANT_ID:-common}
+      - VITE_AZURE_REDIRECT_URI=${VITE_AZURE_REDIRECT_URI:-http://localhost}
       - NODE_ENV=production
     restart: unless-stopped
     healthcheck:
@@ -24,10 +31,23 @@ services:
       retries: 3
       start_period: 40s
 
-# Production configuration:
-# 1. Create a .env file with your Azure AD credentials (see .env.docker.example)
-# 2. Run: docker-compose up -d
+  # Optional: Collaboration server (uncomment to use)
+  # collab-server:
+  #   image: pmoscode/excalidraw-collab-server:latest
+  #   container_name: excalidraw-collab-server
+  #   ports:
+  #     - "3002:3002"
+  #   restart: unless-stopped
+
+# Configuration:
+# 1. Create a .env file with your settings (see .env.docker.example)
+# 2. Customize environment variables for:
+#    - Dynamic Collaboration Server URL
+#    - Azure AD credentials
+# 3. Run: docker-compose up -d
 #
 # Local login is always available:
 # - Username: admin
 # - Password: password
+#
+# Documentation: See DOCKER_DEPLOYMENT.md and DYNAMIC_COLLAB_SERVER.md
