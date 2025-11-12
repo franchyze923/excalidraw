@@ -6,7 +6,13 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        # Azure AD configuration at build time (can be overridden at runtime)
+        # OAuth 2.0 configuration at build time
+        VITE_OAUTH_CLIENT_ID: ${VITE_OAUTH_CLIENT_ID:-}
+        VITE_OAUTH_AUTHORIZATION_ENDPOINT: ${VITE_OAUTH_AUTHORIZATION_ENDPOINT:-}
+        VITE_OAUTH_TOKEN_ENDPOINT: ${VITE_OAUTH_TOKEN_ENDPOINT:-}
+        VITE_OAUTH_REDIRECT_URI: ${VITE_OAUTH_REDIRECT_URI:-http://localhost/auth/callback}
+        VITE_OAUTH_SCOPES: ${VITE_OAUTH_SCOPES:-openid,profile,email}
+        # Azure AD configuration at build time (legacy, deprecated)
         VITE_AZURE_CLIENT_ID: ${VITE_AZURE_CLIENT_ID:-00000000-0000-0000-0000-000000000000}
         VITE_AZURE_TENANT_ID: ${VITE_AZURE_TENANT_ID:-common}
         VITE_AZURE_REDIRECT_URI: ${VITE_AZURE_REDIRECT_URI:-http://localhost}
@@ -18,7 +24,7 @@ services:
       # Collaboration Server Configuration (runtime)
       - APP_WS_OLD_SERVER_URL=${APP_WS_OLD_SERVER_URL:-https://oss-collab.excalidraw.com}
       - APP_WS_NEW_SERVER_URL=${APP_WS_NEW_SERVER_URL:-http://localhost:3002}
-      # Azure AD Configuration (runtime)
+      # Azure AD Configuration (runtime - legacy)
       - VITE_AZURE_CLIENT_ID=${VITE_AZURE_CLIENT_ID:-00000000-0000-0000-0000-000000000000}
       - VITE_AZURE_TENANT_ID=${VITE_AZURE_TENANT_ID:-common}
       - VITE_AZURE_REDIRECT_URI=${VITE_AZURE_REDIRECT_URI:-http://localhost}

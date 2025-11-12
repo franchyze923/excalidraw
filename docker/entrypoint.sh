@@ -44,8 +44,17 @@ OAUTH_CONFIG_EOF
         -e "s|OAUTH_SCOPES_PLACEHOLDER|${SCOPES_ESCAPED}|g" \
         /usr/share/nginx/html/oauth-config.js
 
-    # Inject the config script into the main index.html (before other scripts)
-    sed -i "/<head>/a\\  <script src=\"/oauth-config.js\"></script>" /usr/share/nginx/html/index.html
+    # Debug: show the generated oauth-config.js
+    echo "Generated oauth-config.js content:"
+    cat /usr/share/nginx/html/oauth-config.js
+    echo ""
+
+    # Inject the config script into the main index.html (before closing head or at start of body)
+    if grep -q "</head>" /usr/share/nginx/html/index.html; then
+        sed -i "/<\/head>/i\\  <script src=\"/oauth-config.js\"><\/script>" /usr/share/nginx/html/index.html
+    else
+        sed -i "/<body/a\\  <script src=\"/oauth-config.js\"><\/script>" /usr/share/nginx/html/index.html
+    fi
 
     echo "OAuth configuration injected successfully."
     CONFIG_INJECTED=true
