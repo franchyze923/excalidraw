@@ -15,7 +15,7 @@ import { LanguageList } from "../app-language/LanguageList";
 import { isExcalidrawPlusSignedUser } from "../app_constants";
 
 import { saveDebugState } from "./DebugCanvas";
-import { useAuth } from "./AuthProvider";
+import { useAuth } from "./OAuthAuthProvider";
 
 export const AppMainMenu: React.FC<{
   onCollabDialogOpen: () => any;
