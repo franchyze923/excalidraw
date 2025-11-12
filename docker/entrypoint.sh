@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# This script allows runtime configuration of Azure AD settings and Collaboration Server URL
+# This script allows runtime configuration of OAuth settings and Collaboration Server URL
 # Environment variables can be passed at container runtime to override build-time values
 
 echo "Excalidraw - Starting container..."
@@ -9,7 +9,26 @@ echo "Excalidraw - Starting container..."
 # Track if any configuration was injected
 CONFIG_INJECTED=false
 
-# Handle Azure AD SSO configuration
+# Handle OAuth SSO configuration (generic OAuth 2.0)
+if [ -n "$VITE_OAUTH_CLIENT_ID" ] || [ -n "$VITE_OAUTH_AUTHORIZATION_ENDPOINT" ] || [ -n "$VITE_OAUTH_TOKEN_ENDPOINT" ] || [ -n "$VITE_OAUTH_REDIRECT_URI" ]; then
+    echo "Runtime OAuth configuration detected. Injecting configuration..."
+
+    # Find all JavaScript files in the build directory
+    find /usr/share/nginx/html -type f -name "*.js" -exec sed -i \
+        -e "s|VITE_OAUTH_CLIENT_ID:\s*\"[^\"]*\"|VITE_OAUTH_CLIENT_ID:\"${VITE_OAUTH_CLIENT_ID}\"|g" \
+        -e "s|VITE_OAUTH_AUTHORIZATION_ENDPOINT:\s*\"[^\"]*\"|VITE_OAUTH_AUTHORIZATION_ENDPOINT:\"${VITE_OAUTH_AUTHORIZATION_ENDPOINT}\"|g" \
+        -e "s|VITE_OAUTH_TOKEN_ENDPOINT:\s*\"[^\"]*\"|VITE_OAUTH_TOKEN_ENDPOINT:\"${VITE_OAUTH_TOKEN_ENDPOINT}\"|g" \
+        -e "s|VITE_OAUTH_REDIRECT_URI:\s*\"[^\"]*\"|VITE_OAUTH_REDIRECT_URI:\"${VITE_OAUTH_REDIRECT_URI}\"|g" \
+        -e "s|VITE_OAUTH_SCOPES:\s*\"[^\"]*\"|VITE_OAUTH_SCOPES:\"${VITE_OAUTH_SCOPES}\"|g" \
+        {} \;
+
+    echo "OAuth configuration injected successfully."
+    CONFIG_INJECTED=true
+else
+    echo "Using build-time OAuth configuration (no runtime environment variables provided)."
+fi
+
+# Handle Azure AD SSO configuration (legacy)
 if [ -n "$VITE_AZURE_CLIENT_ID" ] || [ -n "$VITE_AZURE_TENANT_ID" ] || [ -n "$VITE_AZURE_REDIRECT_URI" ]; then
     echo "Runtime Azure AD configuration detected. Injecting configuration..."
 
@@ -43,7 +62,14 @@ fi
 # Display configuration (without sensitive data)
 echo ""
 echo "=== Excalidraw Configuration ==="
-echo "Azure AD Configuration:"
+echo "OAuth Configuration:"
+echo "  Client ID: ${VITE_OAUTH_CLIENT_ID:-[not set]}"
+echo "  Authorization Endpoint: ${VITE_OAUTH_AUTHORIZATION_ENDPOINT:-[not set]}"
+echo "  Token Endpoint: ${VITE_OAUTH_TOKEN_ENDPOINT:-[not set]}"
+echo "  Redirect URI: ${VITE_OAUTH_REDIRECT_URI:-[not set]}"
+echo "  Scopes: ${VITE_OAUTH_SCOPES:-[default: openid,profile,email]}"
+echo ""
+echo "Azure AD Configuration (Legacy):"
 echo "  Client ID: ${VITE_AZURE_CLIENT_ID:-[not set]}"
 echo "  Tenant ID: ${VITE_AZURE_TENANT_ID:-[not set]}"
 echo "  Redirect URI: ${VITE_AZURE_REDIRECT_URI:-[not set]}"
