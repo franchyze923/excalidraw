@@ -29,12 +29,19 @@ window.__OAUTH_CONFIG__ = {
 OAUTH_CONFIG_EOF
 
     # Replace placeholders with actual values
+    # Escape special characters in values for sed
+    CLIENT_ID_ESCAPED=$(echo "${VITE_OAUTH_CLIENT_ID}" | sed 's/[&/\]/\\&/g')
+    AUTH_ENDPOINT_ESCAPED=$(echo "${VITE_OAUTH_AUTHORIZATION_ENDPOINT}" | sed 's/[&/\]/\\&/g')
+    TOKEN_ENDPOINT_ESCAPED=$(echo "${VITE_OAUTH_TOKEN_ENDPOINT}" | sed 's/[&/\]/\\&/g')
+    REDIRECT_URI_ESCAPED=$(echo "${VITE_OAUTH_REDIRECT_URI}" | sed 's/[&/\]/\\&/g')
+    SCOPES_ESCAPED=$(echo "${VITE_OAUTH_SCOPES:-openid,profile,email}" | sed 's/[&/\]/\\&/g')
+
     sed -i \
-        -e "s|OAUTH_CLIENT_ID_PLACEHOLDER|${VITE_OAUTH_CLIENT_ID}|g" \
-        -e "s|OAUTH_AUTH_ENDPOINT_PLACEHOLDER|${VITE_OAUTH_AUTHORIZATION_ENDPOINT}|g" \
-        -e "s|OAUTH_TOKEN_ENDPOINT_PLACEHOLDER|${VITE_OAUTH_TOKEN_ENDPOINT}|g" \
-        -e "s|OAUTH_REDIRECT_URI_PLACEHOLDER|${VITE_OAUTH_REDIRECT_URI}|g" \
-        -e "s|OAUTH_SCOPES_PLACEHOLDER|${VITE_OAUTH_SCOPES:-openid,profile,email}|g" \
+        -e "s|OAUTH_CLIENT_ID_PLACEHOLDER|${CLIENT_ID_ESCAPED}|g" \
+        -e "s|OAUTH_AUTH_ENDPOINT_PLACEHOLDER|${AUTH_ENDPOINT_ESCAPED}|g" \
+        -e "s|OAUTH_TOKEN_ENDPOINT_PLACEHOLDER|${TOKEN_ENDPOINT_ESCAPED}|g" \
+        -e "s|OAUTH_REDIRECT_URI_PLACEHOLDER|${REDIRECT_URI_ESCAPED}|g" \
+        -e "s|OAUTH_SCOPES_PLACEHOLDER|${SCOPES_ESCAPED}|g" \
         /usr/share/nginx/html/oauth-config.js
 
     # Inject the config script into the main index.html (before other scripts)
