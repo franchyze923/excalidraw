@@ -10,9 +10,9 @@ RUN yarn --network-timeout 600000
 
 
 # Build arguments for OAuth 2.0 configuration
-ARG VITE_OAUTH_CLIENT_ID=
-ARG VITE_OAUTH_AUTHORIZATION_ENDPOINT=
-ARG VITE_OAUTH_TOKEN_ENDPOINT=
+ARG VITE_OAUTH_CLIENT_ID=test-client-id
+ARG VITE_OAUTH_AUTHORIZATION_ENDPOINT=https://auth.example.com/oauth/authorize
+ARG VITE_OAUTH_TOKEN_ENDPOINT=https://auth.example.com/oauth/token
 ARG VITE_OAUTH_REDIRECT_URI=http://localhost/auth/callback
 ARG VITE_OAUTH_SCOPES=openid,profile,email
 
