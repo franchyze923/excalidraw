@@ -29,7 +29,7 @@ import Trans from "../Trans";
 import DropdownMenuItem from "../dropdownMenu/DropdownMenuItem";
 import DropdownMenuItemContentRadio from "../dropdownMenu/DropdownMenuItemContentRadio";
 import DropdownMenuItemLink from "../dropdownMenu/DropdownMenuItemLink";
-import { XBrandIcon } from "../icons";
+import { XBrandIcon, logoutIcon } from "../icons";
 import {
   boltIcon,
   DeviceDesktopIcon,
@@ -355,6 +355,9 @@ export const Socials = () => {
   );
 };
 Socials.displayName = "Socials";
+
+// Note: Logout component is implemented in AppMainMenu.tsx
+// as it needs access to the useAuth hook from the auth context
 
 export const LiveCollaborationTrigger = ({
   onSelect,

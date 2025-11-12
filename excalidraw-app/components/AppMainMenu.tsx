@@ -2,6 +2,7 @@ import {
   loginIcon,
   ExcalLogo,
   eyeIcon,
+  logoutIcon,
 } from "@excalidraw/excalidraw/components/icons";
 import { MainMenu } from "@excalidraw/excalidraw/index";
 import React from "react";
@@ -14,6 +15,7 @@ import { LanguageList } from "../app-language/LanguageList";
 import { isExcalidrawPlusSignedUser } from "../app_constants";
 
 import { saveDebugState } from "./DebugCanvas";
+import { useAuth } from "./AuthProvider";
 
 export const AppMainMenu: React.FC<{
   onCollabDialogOpen: () => any;
@@ -23,6 +25,8 @@ export const AppMainMenu: React.FC<{
   setTheme: (theme: Theme | "system") => void;
   refresh: () => void;
 }> = React.memo((props) => {
+  const { logout } = useAuth();
+
   return (
     <MainMenu>
       <MainMenu.DefaultItems.LoadScene />
@@ -50,15 +54,13 @@ export const AppMainMenu: React.FC<{
         Excalidraw+
       </MainMenu.ItemLink>
       <MainMenu.DefaultItems.Socials />
-      <MainMenu.ItemLink
-        icon={loginIcon}
-        href={`${import.meta.env.VITE_APP_PLUS_APP}${
-          isExcalidrawPlusSignedUser ? "" : "/sign-up"
-        }?utm_source=signin&utm_medium=app&utm_content=hamburger`}
-        className="highlighted"
+      <MainMenu.Item
+        icon={logoutIcon}
+        onClick={logout}
+        data-testid="logout-button"
       >
-        {isExcalidrawPlusSignedUser ? "Sign in" : "Sign up"}
-      </MainMenu.ItemLink>
+        Logout
+      </MainMenu.Item>
       {isDevEnv() && (
         <MainMenu.Item
           icon={eyeIcon}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, createContext, useContext } from "react";
 import {
   MsalProvider,
   AuthenticatedTemplate,
@@ -8,6 +8,17 @@ import {
 import type { IPublicClientApplication } from "@azure/msal-browser";
 
 import { loginRequest } from "../authConfig";
+
+// Create context for logout functionality
+const AuthContext = createContext<{ logout: () => void } | null>(null);
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within AuthProvider");
+  }
+  return context;
+};
 
 interface AuthProviderProps {
   msalInstance: IPublicClientApplication;
@@ -311,6 +322,7 @@ const LoginScreen: React.FC<{ onLocalLogin: () => void }> = ({
  */
 const AuthWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isLocallyAuthenticated, setIsLocallyAuthenticated] = useState(false);
+  const { instance } = useMsal();
 
   // Check for local authentication on mount
   useEffect(() => {
@@ -324,19 +336,35 @@ const AuthWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     setIsLocallyAuthenticated(true);
   };
 
-  // If locally authenticated, show the app directly
+  const handleLogout = () => {
+    // Clear local auth
+    localStorage.removeItem(LOCAL_AUTH_KEY);
+    setIsLocallyAuthenticated(false);
+
+    // Logout from Azure AD (if logged in via SSO)
+    instance.logoutRedirect().catch((e) => {
+      // eslint-disable-next-line no-console
+      console.error("Logout failed:", e);
+    });
+  };
+
+  // If locally authenticated, show the app directly with logout capability
   if (isLocallyAuthenticated) {
-    return <>{children}</>;
+    return (
+      <AuthContext.Provider value={{ logout: handleLogout }}>
+        {children}
+      </AuthContext.Provider>
+    );
   }
 
   // Otherwise, show the login screen (which handles both SSO and local auth)
   return (
-    <>
+    <AuthContext.Provider value={{ logout: handleLogout }}>
       <AuthenticatedTemplate>{children}</AuthenticatedTemplate>
       <UnauthenticatedTemplate>
         <LoginScreen onLocalLogin={handleLocalLogin} />
       </UnauthenticatedTemplate>
-    </>
+    </AuthContext.Provider>
   );
 };
 
