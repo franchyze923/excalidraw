@@ -12,20 +12,32 @@ CONFIG_INJECTED=false
 # Handle OAuth SSO configuration (generic OAuth 2.0)
 if [ -n "$VITE_OAUTH_CLIENT_ID" ] || [ -n "$VITE_OAUTH_AUTHORIZATION_ENDPOINT" ] || [ -n "$VITE_OAUTH_TOKEN_ENDPOINT" ] || [ -n "$VITE_OAUTH_REDIRECT_URI" ]; then
     echo "Runtime OAuth configuration detected. Injecting configuration..."
+    echo "  Client ID: ${VITE_OAUTH_CLIENT_ID}"
+    echo "  Auth Endpoint: ${VITE_OAUTH_AUTHORIZATION_ENDPOINT}"
+    echo "  Token Endpoint: ${VITE_OAUTH_TOKEN_ENDPOINT}"
+    echo "  Redirect URI: ${VITE_OAUTH_REDIRECT_URI}"
 
-    # Find all JavaScript files in the build directory
-    find /usr/share/nginx/html -type f -name "*.js" -exec sed -i \
-        -e "s|VITE_OAUTH_CLIENT_ID:\s*\"[^\"]*\"|VITE_OAUTH_CLIENT_ID:\"${VITE_OAUTH_CLIENT_ID}\"|g" \
-        -e "s|VITE_OAUTH_AUTHORIZATION_ENDPOINT:\s*\"[^\"]*\"|VITE_OAUTH_AUTHORIZATION_ENDPOINT:\"${VITE_OAUTH_AUTHORIZATION_ENDPOINT}\"|g" \
-        -e "s|VITE_OAUTH_TOKEN_ENDPOINT:\s*\"[^\"]*\"|VITE_OAUTH_TOKEN_ENDPOINT:\"${VITE_OAUTH_TOKEN_ENDPOINT}\"|g" \
-        -e "s|VITE_OAUTH_REDIRECT_URI:\s*\"[^\"]*\"|VITE_OAUTH_REDIRECT_URI:\"${VITE_OAUTH_REDIRECT_URI}\"|g" \
-        -e "s|VITE_OAUTH_SCOPES:\s*\"[^\"]*\"|VITE_OAUTH_SCOPES:\"${VITE_OAUTH_SCOPES}\"|g" \
-        {} \;
+    # Find all JavaScript files in the build directory and replace OAuth configuration
+    # Handle multiple patterns that might appear in the bundled JS
+    find /usr/share/nginx/html -type f -name "*.js" -print0 | xargs -0 sed -i \
+        -e "s|VITE_OAUTH_CLIENT_ID:\"[^\"]*\"|VITE_OAUTH_CLIENT_ID:\"${VITE_OAUTH_CLIENT_ID}\"|g" \
+        -e "s|clientId:\"[^\"]*\"|clientId:\"${VITE_OAUTH_CLIENT_ID}\"|g" \
+        -e "s|VITE_OAUTH_AUTHORIZATION_ENDPOINT:\"[^\"]*\"|VITE_OAUTH_AUTHORIZATION_ENDPOINT:\"${VITE_OAUTH_AUTHORIZATION_ENDPOINT}\"|g" \
+        -e "s|authorizationEndpoint:\"[^\"]*\"|authorizationEndpoint:\"${VITE_OAUTH_AUTHORIZATION_ENDPOINT}\"|g" \
+        -e "s|VITE_OAUTH_TOKEN_ENDPOINT:\"[^\"]*\"|VITE_OAUTH_TOKEN_ENDPOINT:\"${VITE_OAUTH_TOKEN_ENDPOINT}\"|g" \
+        -e "s|tokenEndpoint:\"[^\"]*\"|tokenEndpoint:\"${VITE_OAUTH_TOKEN_ENDPOINT}\"|g" \
+        -e "s|VITE_OAUTH_REDIRECT_URI:\"[^\"]*\"|VITE_OAUTH_REDIRECT_URI:\"${VITE_OAUTH_REDIRECT_URI}\"|g" \
+        -e "s|redirectUri:\"[^\"]*\"|redirectUri:\"${VITE_OAUTH_REDIRECT_URI}\"|g" \
+        -e "s|VITE_OAUTH_SCOPES:\"[^\"]*\"|VITE_OAUTH_SCOPES:\"${VITE_OAUTH_SCOPES}\"|g"
 
     echo "OAuth configuration injected successfully."
     CONFIG_INJECTED=true
 else
     echo "Using build-time OAuth configuration (no runtime environment variables provided)."
+    echo "  VITE_OAUTH_CLIENT_ID: [${VITE_OAUTH_CLIENT_ID}]"
+    echo "  VITE_OAUTH_AUTHORIZATION_ENDPOINT: [${VITE_OAUTH_AUTHORIZATION_ENDPOINT}]"
+    echo "  VITE_OAUTH_TOKEN_ENDPOINT: [${VITE_OAUTH_TOKEN_ENDPOINT}]"
+    echo "  VITE_OAUTH_REDIRECT_URI: [${VITE_OAUTH_REDIRECT_URI}]"
 fi
 
 # Handle Azure AD SSO configuration (legacy)
