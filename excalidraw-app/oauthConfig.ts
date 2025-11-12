@@ -21,21 +21,15 @@ const windowConfig = typeof window !== "undefined" ? (window as any).__OAUTH_CON
 
 const defaultScopes: string[] = ["openid", "profile", "email"];
 
-// Helper to get scopes from config or env
-const getScopes = (): string[] => {
-  if (windowConfig?.scopes && windowConfig.scopes.length > 0) {
-    return windowConfig.scopes.split(",").map((s: string) => s.trim());
-  }
-  if (
-    import.meta.env.VITE_OAUTH_SCOPES &&
-    import.meta.env.VITE_OAUTH_SCOPES.length > 0
-  ) {
-    return import.meta.env.VITE_OAUTH_SCOPES.split(",").map((s: string) =>
-      s.trim()
-    );
-  }
-  return defaultScopes;
-};
+const scopesString =
+  windowConfig?.scopes ||
+  import.meta.env.VITE_OAUTH_SCOPES ||
+  defaultScopes.join(",");
+
+const parsedScopes =
+  typeof scopesString === "string"
+    ? scopesString.split(",").map((s: string) => s.trim())
+    : scopesString;
 
 export const oauthConfig: OAuthConfig = {
   clientId:
@@ -54,7 +48,9 @@ export const oauthConfig: OAuthConfig = {
     windowConfig?.redirectUri ||
     import.meta.env.VITE_OAUTH_REDIRECT_URI ||
     window.location.origin,
-  scopes: getScopes(),
+  scopes: Array.isArray(parsedScopes)
+    ? parsedScopes
+    : (parsedScopes as unknown as string).split(",").map((s: string) => s.trim()),
 };
 
 // Debug logging
