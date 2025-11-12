@@ -12,6 +12,7 @@
 !tsconfig.json
 !yarn.lock
 !docker/
+!nginx-init-scripts/
 
 # Exclude local environment files
 excalidraw-app/.env.local
