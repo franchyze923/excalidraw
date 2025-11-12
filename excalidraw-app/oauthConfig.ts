@@ -19,17 +19,17 @@ import type { OAuthConfig } from "./lib/oauth";
 // Get OAuth config from window (injected at runtime) or fall back to env vars
 const windowConfig = typeof window !== "undefined" ? (window as any).__OAUTH_CONFIG__ : null;
 
-const defaultScopes: string[] = ["openid", "profile", "email"];
+const defaultScopes = ["openid", "profile", "email"];
 
-const scopesString =
-  windowConfig?.scopes ||
-  import.meta.env.VITE_OAUTH_SCOPES ||
-  defaultScopes.join(",");
-
-const parsedScopes =
-  typeof scopesString === "string"
-    ? scopesString.split(",").map((s: string) => s.trim())
-    : scopesString;
+const getScopeString = (): string => {
+  if (windowConfig?.scopes) {
+    return windowConfig.scopes;
+  }
+  if (import.meta.env.VITE_OAUTH_SCOPES) {
+    return import.meta.env.VITE_OAUTH_SCOPES;
+  }
+  return defaultScopes.join(",");
+};
 
 export const oauthConfig: OAuthConfig = {
   clientId:
@@ -48,9 +48,9 @@ export const oauthConfig: OAuthConfig = {
     windowConfig?.redirectUri ||
     import.meta.env.VITE_OAUTH_REDIRECT_URI ||
     window.location.origin,
-  scopes: Array.isArray(parsedScopes)
-    ? parsedScopes
-    : (parsedScopes as unknown as string).split(",").map((s: string) => s.trim()),
+  scopes: getScopeString()
+    .split(",")
+    .map((s: string) => s.trim()) as string[],
 };
 
 // Debug logging
@@ -61,6 +61,6 @@ if (typeof window !== "undefined") {
     authorizationEndpoint: oauthConfig.authorizationEndpoint || "NOT SET",
     tokenEndpoint: oauthConfig.tokenEndpoint || "NOT SET",
     redirectUri: oauthConfig.redirectUri || "NOT SET",
-    scopes: oauthConfig.scopes.join(", "),
+    scopes: oauthConfig.scopes ? oauthConfig.scopes.join(", ") : "NOT SET",
   });
 }
