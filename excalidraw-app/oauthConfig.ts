@@ -19,6 +19,8 @@ import type { OAuthConfig } from "./lib/oauth";
 // Get OAuth config from window (injected at runtime) or fall back to env vars
 const windowConfig = typeof window !== "undefined" ? (window as any).__OAUTH_CONFIG__ : null;
 
+const defaultScopes = ["openid", "profile", "email"];
+
 export const oauthConfig: OAuthConfig = {
   clientId:
     windowConfig?.clientId ||
@@ -36,15 +38,15 @@ export const oauthConfig: OAuthConfig = {
     windowConfig?.redirectUri ||
     import.meta.env.VITE_OAUTH_REDIRECT_URI ||
     window.location.origin,
-  scopes: windowConfig?.scopes
-    ? windowConfig.scopes
-        .split(",")
-        .map((s: string) => s.trim())
-    : import.meta.env.VITE_OAUTH_SCOPES
-      ? import.meta.env.VITE_OAUTH_SCOPES.split(",").map((s: string) =>
-          s.trim()
-        )
-      : ["openid", "profile", "email"],
+  scopes:
+    windowConfig?.scopes && windowConfig.scopes.length > 0
+      ? windowConfig.scopes.split(",").map((s: string) => s.trim())
+      : import.meta.env.VITE_OAUTH_SCOPES &&
+          import.meta.env.VITE_OAUTH_SCOPES.length > 0
+        ? import.meta.env.VITE_OAUTH_SCOPES.split(",").map((s: string) =>
+            s.trim()
+          )
+        : defaultScopes,
 };
 
 // Debug logging
