@@ -91,7 +91,7 @@ const LoginScreen: React.FC<{ onLocalLogin: () => void }> = ({
             textAlign: "center",
           }}
         >
-          Excalidraw +9
+          Excalidraw +10
         </h1>
         <p
           style={{
